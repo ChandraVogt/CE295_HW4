@@ -1,0 +1,242 @@
+load('HW4TrainData')
+load('HW4TestData')
+
+
+%% Learning MatLab
+% help "function" -> use it
+% [ ]       -> matrix
+% x-ones(6) -> 6x6 matrix of ones
+% x(:,1)    -> all row elements in first column
+
+% x=[1:1:5] -> one to five in elements of one
+% length(x) -> number of units
+% size is more robust when dealing with matrices
+% [row col] = size x variables of the numbers of rows & columns
+% ==        -> find/check 
+% plot, scatter, bar -> plot types
+%%
+
+%% Problem 1
+
+% Data & Stats
+TrD = HW4TrainData; % Train Data
+AvgB = mean(TrD); % Average Building Consumption
+Std = std(TrD);   % Standard Deviation of TrD
+x = [1:1:24];     % Hours of Day
+
+
+figure(1)
+bar(AvgB, 'FaceColor', [.5 1 .5])
+xticks(1:23);
+xlabel('building number')
+ylabel('average energy consumption kW')
+hold on
+errorbar(avgcons,standd,'r','Linestyle','none')
+hold off
+
+%% -> % 1 building
+[x,y]=find(Train <0);
+neg_build = unique(y);
+
+%B=[A[:,1:5],A[:7:end]];
+%GET RID OF BUILDING 6
+
+
+Train(:,6)=[];   %Removes column/building 6
+%%
+
+for i=1:22
+    Data_norm(:,i)=Train(:,i)/max(Train(:,i));
+end
+%norms = Train./max(Train);
+
+
+
+WOY = week(StartTime);
+DOY = weekday(StartTime);
+HOD = hour(StartTime);
+
+BLD4D = zeros(22,51,7,24);
+for bid=1:22
+    for z=1:8568
+        BLD4D(bid,WOY(z)-1,DOY(z),HOD(z)+1)=Data_norm(z,bid);
+    end
+end
+
+
+
+
+
+
+
+
+%R = reshape(Data_norm,22,51,7,24);  %building number, week, day, hour
+days = {'sunday', 'monday', 'tuesday','wednesday','thursday','friday', 'saturday'};
+
+
+
+figure(2)
+for j = 1:7
+    subplot(3,3,j)
+    
+    for b=1:22
+        for wid =1:51
+            plot(squeeze(BLD4D(b,wid,j,:)))
+            
+            hold on
+            
+            % plot(BLD4D(:,:,j,i))
+            
+            
+        end
+        % plot(mee(j),'k','LineWidth',2)
+        %avgbuild=mean(R(:,:,j,i));
+        
+        %plot(avgbuild,'k','LineWidth',1)
+        % plot(avgcons,'k','LineWidth',1)
+        %(Data_norm,22,51,7,24)
+        %    counter = 0;
+        %  avg_g=zeros(7,24);
+        %  for p=1:7
+        %      for z=1:22
+        %         for k=1:51
+        %             counter=counter+1;
+        %            g(counter,1:24)= R(z,k,i,:);
+        %            avg_g(i,1:24)=avg_g(i,1:24)+g(counter,:);
+        %         end
+        %    end
+        %      avg_g(z,1:24)=avg_g(1:24)/51/22;
+        %       plot(avg_g,'k','LineWidth',2)
+        % end
+        % end
+        % R(:,:,j:);
+        %me= mean(R(:,:,j,:),1);
+        % plot(avgbuild,'k','LineWidth',1)
+        %(Data_norm,22,51,7,24)
+    end
+    % avgconnew=mean(Train);
+    mee(j,:)=mean(squeeze(mean(squeeze(BLD4D(:,:,j,:)),1)),1);
+    plot(mee(j,:),'k','LineWidth',2);
+    title(sprintf( '%s',days{j}));
+    xlabel('hour of the day')
+    ylabel('normalized kWh')
+end
+hold off
+
+%%
+figure()
+count = 0;
+mat = nan(1122,24);
+for b=1:22
+    for wid =1:51
+        count = count + 1;
+        mat(count,:) = squeeze(BLD4D(b,wid,1,:))';
+        plot((0:23)',squeeze(BLD4D(b,wid,1,:)))
+        
+        hold on
+        
+        % plot(BLD4D(:,:,j,i))
+        
+        
+    end
+end
+
+%%     % problem 2
+
+days = {'sunday', 'monday', 'tuesday','wednesday','thursday','friday', 'saturday'};
+for j = 1:7
+    %figure(3)
+    subplot(3,3,j)
+    % average=mean(reshape(HW4TestData,[7,24],2));  %uncertain of
+    
+    singleday= HW4TestData(j*24-23:(j*24));
+    
+    plot(mee(j,:),'k','LineWidth',1) %1 day of week
+    
+    hold on
+    plot(singleday)
+    % z=[1:1:24];
+    
+    
+    % figure(4)
+    % plot(z,ones(size(z))*Avg,'k','LineWidth',1)
+    title(sprintf('%s',days{j}))
+    xlabel('hour')
+    ylabel('normalized energy consumption')
+    hold off
+    
+    for i=i:24
+        MAE(i)=abs(singleday(i)-Avg);
+    end
+    MAE_end(j)=sum(MAE);
+end
+figure(4)
+scatter([1:1:7],MAE_end,'filled')
+title('MAE')
+grid on
+xticklabels(days)
+
+%%
+
+%problem 3
+
+TrainN=Data_norm;
+
+Pavg=mean(TrainN,2);
+Y_sub=TrainN-Pavg;
+Y=Y_sub(:);
+
+phione=zeros(length(TrainN)-4,22);
+phitwo=zeros(length(TrainN)-4,22);
+phithree=zeros(length(TrainN)-4,22);
+
+
+for i=4:length(TrainN);
+    phione(i,:)=Train(i,:)-Train(i-1,:);
+end
+
+for i=length(TrainN);
+    phitwo(i,:)=TrainN(i,:)-TrainN(i-2,:);
+end
+
+for i=length(TrainN);
+    phithree(i,:)=TrainN(i,:)-TrainN(i-3,:);
+end
+phione=phione(:);
+phitwo=phitwo(:);
+phithree=phithree(:);
+
+
+
+phi=[phione phitwo phithree];
+
+thetastar=((transpose(phi)*phi)^(-1))*transpose(phi)*Y;
+
+%Phat= thetastar*(???)
+
+
+% for i=1:7
+%  d(i,1:24)=HW4TestData((i-1)*24+1:i*24/max(HW4TestData);
+% subplot(3,3,i)
+% plot(1:24,d(i,1:24))
+% hold on
+% plot(1:24(Phat(i,1:24))
+% hold off
+% title(sprintf( '%s',days{i}));
+% legend('Test Data','Predictive Data')
+% xlabel('Hour of Day')
+% ylabel('Normalized energy consumption')
+
+
+
+
+
+
+
+
+
+%%
+%problem 4
+
+
+
