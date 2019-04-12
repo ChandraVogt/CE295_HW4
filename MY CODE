@@ -1,0 +1,96 @@
+%% HW4
+load('HW4TrainData.mat')
+TrD = HW4TrainData(:,2:end);
+load('HW4TestData.mat')
+TestData = HW4TestData(:,1);
+%Avg energy consumption
+kwh_avg = mean(TrainData);
+kwh_std = std(TrainData);
+%Bar Graph
+h=bar(kwh_avg, 'FaceColor','#EDB120');
+xticks(1:1:23)
+xlabel('Building Index')
+ylabel('Avg Power Consumption (kWh)')
+hold on
+errorbar(kwh_avg,kwh_std, 'r', 'Linestyle', 'none')
+%% Remove building 6
+TrainData(:,6)=[];
+%% Normalized for 1c
+for i=1:22
+    data_norm(:,i)=TrainData(:,i)./max(TrainData(:,i));
+end
+%% Problem 1c - reshape
+StartTime = HW4TrainData(:,2);
+woy = week(StartTimeReal);
+dow = weekday(StartTimeReal);
+hod = hour(StartTimeReal);
+Bldg_4D = zeros(22,51,7,24);
+for bldg_index=1:22
+    for j=1:8568 %or size(Bldg2D,1)
+    %Bldg_4D(bldg_index, woy(j),dow(j),hod(j))=Bldg2D(j,bldg_index);
+    end
+end
+%% Problem 1c - Final    
+%check the reshape function!
+R = reshape(data_norm,22,51,7,24);  
+wkdays = {'Sunday','Monday', 'Tuesday','Wednesday','Thursday','Friday','Saturday'};
+for j=1:7
+    subplot(2,4,j)
+    for i=1:24
+        plot(R(:,:,j,i))%Day of the week, hourly data
+        hold on
+    end
+    avg_dow(j,:) = (mean(squeeze(mean(squeeze(R(:,:,j,:)),1)),1));
+    plot(avg_dow(j,:),'k', 'LineWidth', 2, 'LineStyle', '--') 
+    xlabel('Hours of Day')
+    ylabel('Normalized Consumption(kWh)')
+    title(sprintf('%s',wkdays{j}))
+    hold off
+end
+%%
+avg_dow=mean(reshape(TestData,[7,24]),2);
+%% Problem 2 - Final 
+% = mean(TestData( );
+wkdays = {'Sunday','Monday', 'Tuesday','Wednesday','Thursday','Friday','Saturday'};
+for j=1:7
+    subplot(3,3,j)
+    one_day = TestData(j*24-23:(j*24))
+    %avg_dow_b = mean(reshape(TestData,[7,24]),2);
+    avg_dow(j)
+    plot(avg_dow(j,:),'k', 'LineWidth', 1.5, 'LineStyle','--')
+    hold on
+    plot(one_day) %1 DoW
+        for i=1:24
+        MAE(i) = abs(one_day(i)-avg_dow(j))
+        end
+        MAE_end(j) = sum(MAE)
+    %'k', 'LineWidth', 1.5, 'LineStyle','--'
+    title(sprintf('%s',wkdays{j}))
+    xlabel('Hours of Day')
+    ylabel('Normalized Consumption (kWh)')
+    hold off
+end
+%% Problem 3 
+%Empty matrices
+Phi_1 = zeros(length(data_norm)-4,22); 
+Phi_2 = zeros(length(data_norm)-4,22); 
+Phi_3 = zeros(length(data_norm)-4,22);
+avg_hr = mean(data_norm,2); %Y_1=P(1)-P_avg(1)
+Y_avg = data_norm-avg_hr;
+Y_vec = data_norm(:);
+for i=4:length(data_norm);
+    Phi_1(i,:)=data_norm(i,:) - data_norm(i-1,:);
+end
+for i=4:length(TrainData);
+    Phi_2(i,:)=data_norm(i,:) - data_norm(i-2,:);
+end
+for i=4:length(data_norm);
+    Phi_3(i,:)=data_norm(i,:) - data_norm(i-3,:);
+end
+Phi_1 = Phi_1(:);
+Phi_2 = Phi_2(:);
+Phi_3 = Phi_3(:);
+Phi = [Phi_1 Phi_2 Phi_3]
+Theta = (transpose(Phi)*Phi)^(-1)*transpose(Phi)*Y_vec
+%% Problem 3d 
+%test_avg
